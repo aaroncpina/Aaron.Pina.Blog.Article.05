@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aaron.Pina.Blog.Article.05.Server", "Aaron.Pina.Blog.Article.05.Server\Aaron.Pina.Blog.Article.05.Server.csproj", "{BA3F1C14-3E09-4BD4-A044-BB40943069C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aaron.Pina.Blog.Article.05.Client", "Aaron.Pina.Blog.Article.05.Client\Aaron.Pina.Blog.Article.05.Client.csproj", "{C35FE51F-FFD2-4BDA-957D-1BE180E12E14}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aaron.Pina.Blog.Article.05.Shared", "Aaron.Pina.Blog.Article.05.Shared\Aaron.Pina.Blog.Article.05.Shared.csproj", "{96DDF2B8-80F7-4B1A-8809-F5AED43A9EFA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA3F1C14-3E09-4BD4-A044-BB40943069C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA3F1C14-3E09-4BD4-A044-BB40943069C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA3F1C14-3E09-4BD4-A044-BB40943069C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA3F1C14-3E09-4BD4-A044-BB40943069C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C35FE51F-FFD2-4BDA-957D-1BE180E12E14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C35FE51F-FFD2-4BDA-957D-1BE180E12E14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C35FE51F-FFD2-4BDA-957D-1BE180E12E14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C35FE51F-FFD2-4BDA-957D-1BE180E12E14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96DDF2B8-80F7-4B1A-8809-F5AED43A9EFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96DDF2B8-80F7-4B1A-8809-F5AED43A9EFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96DDF2B8-80F7-4B1A-8809-F5AED43A9EFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96DDF2B8-80F7-4B1A-8809-F5AED43A9EFA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
