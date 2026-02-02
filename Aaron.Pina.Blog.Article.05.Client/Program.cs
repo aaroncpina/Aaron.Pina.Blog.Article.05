@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient("server-api", Configuration.TokenServer.HttpClientSettings)
                 .ConfigurePrimaryHttpMessageHandler(Configuration.TokenServer.HttpMessageHandlerSettings)
                 .AddHttpMessageHandler<TokenRefreshHandler>();
+builder.Services.AddHostedService<TokenRefresherService>();
 builder.Services.AddScoped<TokenRefreshHandler>();
 builder.Services.AddSingleton<TokenStore>();
 
