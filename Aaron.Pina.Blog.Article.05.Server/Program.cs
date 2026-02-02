@@ -41,17 +41,17 @@ app.MapGet("/token", (IOptionsSnapshot<TokenConfig> config, TokenRepository repo
             });
         }
         var now = DateTime.UtcNow;
-        var exp = now.AddMinutes(config.Value.TokenLifetime);
-        var entity = new TokenEntity
+        var refreshToken = TokenGenerator.GenerateRefreshToken();
+        var accessToken = TokenGenerator.GenerateToken(rsaKey, userId, now, config.Value.TokenLifetime);
+        var response = new TokenResponse(accessToken, refreshToken, config.Value.TokenLifetime);
+        repository.SaveToken(new TokenEntity
         {
-            UserId = userId,
-            ExpiresAt = exp,
+            ExpiresAt = now.AddMinutes(config.Value.TokenLifetime),
+            RefreshToken = refreshToken,
             CreatedAt = now,
-            RefreshToken = TokenGenerator.GenerateRefreshToken(),
-            Token = TokenGenerator.GenerateToken(rsaKey, userId, now, config.Value.TokenLifetime)
-        };
-        repository.SaveToken(entity);
-        return Results.Ok(entity.ToResponse());
+            UserId = userId
+        });
+        return Results.Ok(response);
     })
    .AllowAnonymous();
 
@@ -62,12 +62,13 @@ app.MapPost("/refresh", (IOptionsSnapshot<TokenConfig> config, HttpContext conte
         var existing = repository.TryGetTokenByRefreshToken(refreshToken);
         if (existing is null) return Results.Unauthorized();
         var now = DateTime.UtcNow;
-        var exp = now.AddMinutes(config.Value.TokenLifetime);
-        existing.ExpiresAt = exp;
-        existing.RefreshToken = TokenGenerator.GenerateRefreshToken();
-        existing.Token = TokenGenerator.GenerateToken(rsaKey, existing.UserId, now, config.Value.TokenLifetime);
+        var newRefreshToken = TokenGenerator.GenerateRefreshToken();
+        var accessToken = TokenGenerator.GenerateToken(rsaKey, existing.UserId, now, config.Value.TokenLifetime);
+        var response = new TokenResponse(accessToken, newRefreshToken, config.Value.TokenLifetime);
+        existing.ExpiresAt = now.AddMinutes(config.Value.TokenLifetime);
+        existing.RefreshToken = newRefreshToken;
         repository.UpdateToken(existing);
-        return Results.Ok(existing.ToResponse());
+        return Results.Ok(response);
     })
    .AllowAnonymous();
 

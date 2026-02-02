@@ -24,9 +24,9 @@ app.MapGet("/login", async (IHttpClientFactory factory, TokenStore tokenStore) =
     if (!tokenResponse.IsSuccessStatusCode) return Results.BadRequest("Unable to get token");
     var token = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
     if (token is null) return Results.BadRequest("Unable to parse token");
-    tokenStore.Expiry = DateTime.UtcNow.AddMinutes(token.ExpiresIn);
+    tokenStore.ExpiresAt = DateTime.UtcNow.AddMinutes(token.ExpiresIn);
     tokenStore.RefreshToken = token.RefreshToken;
-    tokenStore.Token = token.Token;
+    tokenStore.AccessToken = token.AccessToken;
     return Results.Ok("Logged in");
 });
 
@@ -36,7 +36,7 @@ app.MapGet("/info", async (IHttpClientFactory factory, TokenStore store) =>
     if (client.BaseAddress is null) return Results.BadRequest("Unable to get base address");
     var uriBuilder = new UriBuilder(client.BaseAddress) { Path = "user" };
     using var request = new HttpRequestMessage(HttpMethod.Get, uriBuilder.Uri);
-    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", store.Token);
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", store.AccessToken);
     using var response = await client.SendAsync(request);
     if (!response.IsSuccessStatusCode) return Results.BadRequest("Unable to get user info");
     var user = await response.Content.ReadFromJsonAsync<UserResponse>();

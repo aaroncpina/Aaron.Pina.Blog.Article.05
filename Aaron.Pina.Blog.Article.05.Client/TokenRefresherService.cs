@@ -11,44 +11,50 @@ public class TokenRefresherService(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             try
             {
+                logger.LogInformation("Proactively checking expiry of tokens");
                 using var scope = serviceProvider.CreateScope();
                 var store = scope.ServiceProvider.GetRequiredService<TokenStore>();
-                if (string.IsNullOrEmpty(store.Token)
-                ||  string.IsNullOrEmpty(store.RefreshToken)
-                ||  store.Expiry.Subtract(DateTime.UtcNow) > TimeSpan.FromMinutes(5))
+                if (string.IsNullOrEmpty(store.RefreshToken)
+                ||  string.IsNullOrEmpty(store.AccessToken)
+                ||  store.ExpiresAt is null)
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                    logger.LogInformation("Tokens still uninitialised");
+                    continue;
+                }
+                var expiresIn = store.ExpiresAt.Value.Subtract(DateTime.UtcNow);
+                if (expiresIn > TimeSpan.FromMinutes(5))
+                {
+                    logger.LogInformation("Access token expires in {ExpiresIn} minutes", expiresIn.TotalMinutes);
                     continue;
                 }
                 var client = factory.CreateClient("server-api");
                 var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:5001/refresh");
                 var content = new KeyValuePair<string, string>("refresh_token", store.RefreshToken);
                 request.Content = new FormUrlEncodedContent([content]);
+                logger.LogInformation("Calling server to refresh tokens");
                 using var response = await client.SendAsync(request, stoppingToken);
                 if (!response.IsSuccessStatusCode)
                 {
-                    logger.LogWarning("Refresh failed with status {StatusCode}", response.StatusCode);
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                    logger.LogWarning("Server refresh token response failed");
                     continue;
                 }
-                var tokenResponse = await response.Content.ReadFromJsonAsync<TokenResponse>(stoppingToken);
-                if (tokenResponse is null)
+                var tokens = await response.Content.ReadFromJsonAsync<TokenResponse>(stoppingToken);
+                if (tokens is null)
                 {
-                    logger.LogWarning("Refresh response was null or invalid");
-                    await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                    logger.LogWarning("Refresh token response content was invalid");
                     continue;
                 }
-                store.Expiry = DateTime.UtcNow.AddMinutes(tokenResponse.ExpiresIn);
-                store.RefreshToken = tokenResponse.RefreshToken;
-                store.Token = tokenResponse.Token;
-                logger.LogInformation("Proactively refreshed token");
+                store.ExpiresAt = DateTime.UtcNow.AddMinutes(tokens.ExpiresIn);
+                store.RefreshToken = tokens.RefreshToken;
+                store.AccessToken = tokens.AccessToken;
+                logger.LogInformation("Refreshed tokens");
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Unexpected error in proactive refresh loop");
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                logger.LogError(exception, "Unexpected error in proactive token refresh loop");
             }
         }
     }

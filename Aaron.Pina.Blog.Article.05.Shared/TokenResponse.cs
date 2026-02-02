@@ -1,3 +1,3 @@
 namespace Aaron.Pina.Blog.Article._05.Shared;
 
-public record TokenResponse(string Token, string RefreshToken, double ExpiresIn);
+public record TokenResponse(string AccessToken, string RefreshToken, double ExpiresIn);

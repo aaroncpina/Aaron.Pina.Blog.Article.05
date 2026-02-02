@@ -15,10 +15,10 @@ public class TokenRefreshHandler(TokenStore store) : DelegatingHandler
         await _refreshLock.WaitAsync(ct);
         try
         {
-            if (string.IsNullOrEmpty(store.Token) || string.IsNullOrEmpty(store.RefreshToken)) return response;
-            if (store.Expiry < DateTime.UtcNow)
+            if (string.IsNullOrEmpty(store.AccessToken) || string.IsNullOrEmpty(store.RefreshToken)) return response;
+            if (store.ExpiresAt < DateTime.UtcNow)
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", store.Token);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", store.AccessToken);
                 return await base.SendAsync(request, ct);
             }
             var refreshRequest = new HttpRequestMessage(HttpMethod.Post, "https://localhost:5001/refresh");
@@ -28,10 +28,10 @@ public class TokenRefreshHandler(TokenStore store) : DelegatingHandler
             if (!refreshResponse.IsSuccessStatusCode) return response;
             var tokenResponse = await refreshResponse.Content.ReadFromJsonAsync<TokenResponse>(ct);
             if (tokenResponse is null) return response;
-            store.Expiry = DateTime.UtcNow.AddMinutes(tokenResponse.ExpiresIn);
+            store.ExpiresAt = DateTime.UtcNow.AddMinutes(tokenResponse.ExpiresIn);
             store.RefreshToken = tokenResponse.RefreshToken;
-            store.Token = tokenResponse.Token;
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.Token);
+            store.AccessToken = tokenResponse.AccessToken;
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
             return await base.SendAsync(request, ct);
         }
         finally
