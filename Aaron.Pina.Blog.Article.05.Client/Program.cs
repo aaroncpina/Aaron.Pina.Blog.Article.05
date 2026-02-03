@@ -24,7 +24,7 @@ app.MapGet("/login", async (IHttpClientFactory factory, TokenStore tokenStore) =
     if (!tokenResponse.IsSuccessStatusCode) return Results.BadRequest("Unable to get token");
     var token = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
     if (token is null) return Results.BadRequest("Unable to parse token");
-    tokenStore.ExpiresAt = DateTime.UtcNow.AddMinutes(token.ExpiresIn);
+    tokenStore.AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(token.AccessTokenExpiresIn);
     tokenStore.RefreshToken = token.RefreshToken;
     tokenStore.AccessToken = token.AccessToken;
     return Results.Ok("Logged in");

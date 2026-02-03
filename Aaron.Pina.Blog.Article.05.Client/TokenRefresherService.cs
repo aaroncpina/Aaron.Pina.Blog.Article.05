@@ -19,12 +19,12 @@ public class TokenRefresherService(
                 var store = scope.ServiceProvider.GetRequiredService<TokenStore>();
                 if (string.IsNullOrEmpty(store.RefreshToken)
                 ||  string.IsNullOrEmpty(store.AccessToken)
-                ||  store.ExpiresAt is null)
+                ||  store.AccessTokenExpiresAt is null)
                 {
                     logger.LogInformation("Tokens still uninitialised");
                     continue;
                 }
-                var expiresIn = store.ExpiresAt.Value.Subtract(DateTime.UtcNow);
+                var expiresIn = store.AccessTokenExpiresAt.Value.Subtract(DateTime.UtcNow);
                 if (expiresIn > TimeSpan.FromMinutes(5))
                 {
                     logger.LogInformation("Access token expires in {ExpiresIn} minutes", expiresIn.TotalMinutes);
@@ -47,7 +47,7 @@ public class TokenRefresherService(
                     logger.LogWarning("Refresh token response content was invalid");
                     continue;
                 }
-                store.ExpiresAt = DateTime.UtcNow.AddMinutes(tokens.ExpiresIn);
+                store.AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(tokens.AccessTokenExpiresIn);
                 store.RefreshToken = tokens.RefreshToken;
                 store.AccessToken = tokens.AccessToken;
                 logger.LogInformation("Refreshed tokens");

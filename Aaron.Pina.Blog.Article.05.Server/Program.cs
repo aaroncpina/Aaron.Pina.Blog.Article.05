@@ -42,11 +42,11 @@ app.MapGet("/token", (IOptionsSnapshot<TokenConfig> config, TokenRepository repo
         }
         var now = DateTime.UtcNow;
         var refreshToken = TokenGenerator.GenerateRefreshToken();
-        var accessToken = TokenGenerator.GenerateToken(rsaKey, userId, now, config.Value.TokenLifetime);
-        var response = new TokenResponse(accessToken, refreshToken, config.Value.TokenLifetime);
+        var accessToken = TokenGenerator.GenerateToken(rsaKey, userId, now, config.Value.AccessTokenLifetime);
+        var response = new TokenResponse(accessToken, refreshToken, config.Value.AccessTokenLifetime);
         repository.SaveToken(new TokenEntity
         {
-            ExpiresAt = now.AddMinutes(config.Value.TokenLifetime),
+            RefreshTokenExpiresAt = now.AddMinutes(config.Value.RefreshTokenLifetime),
             RefreshToken = refreshToken,
             CreatedAt = now,
             UserId = userId
@@ -60,12 +60,20 @@ app.MapPost("/refresh", (IOptionsSnapshot<TokenConfig> config, HttpContext conte
         var refreshToken = context.Request.Form["refresh_token"].FirstOrDefault();
         if (string.IsNullOrEmpty(refreshToken)) return Results.BadRequest();
         var existing = repository.TryGetTokenByRefreshToken(refreshToken);
-        if (existing is null) return Results.Unauthorized();
+        if (existing is null) return Results.BadRequest();
+        if (existing.RefreshTokenExpiresAt < DateTime.UtcNow)
+        {
+            return Results.BadRequest(new
+            {
+                Error = "Refresh token has expired",
+                Message = "Please login again to get a new token"
+            });
+        }
         var now = DateTime.UtcNow;
         var newRefreshToken = TokenGenerator.GenerateRefreshToken();
-        var accessToken = TokenGenerator.GenerateToken(rsaKey, existing.UserId, now, config.Value.TokenLifetime);
-        var response = new TokenResponse(accessToken, newRefreshToken, config.Value.TokenLifetime);
-        existing.ExpiresAt = now.AddMinutes(config.Value.TokenLifetime);
+        var accessToken = TokenGenerator.GenerateToken(rsaKey, existing.UserId, now, config.Value.AccessTokenLifetime);
+        var response = new TokenResponse(accessToken, newRefreshToken, config.Value.AccessTokenLifetime);
+        existing.RefreshTokenExpiresAt = now.AddMinutes(config.Value.RefreshTokenLifetime);
         existing.RefreshToken = newRefreshToken;
         repository.UpdateToken(existing);
         return Results.Ok(response);

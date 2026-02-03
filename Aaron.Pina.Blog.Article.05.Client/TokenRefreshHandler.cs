@@ -16,7 +16,7 @@ public class TokenRefreshHandler(TokenStore store) : DelegatingHandler
         try
         {
             if (string.IsNullOrEmpty(store.AccessToken) || string.IsNullOrEmpty(store.RefreshToken)) return response;
-            if (store.ExpiresAt < DateTime.UtcNow)
+            if (store.AccessTokenExpiresAt < DateTime.UtcNow)
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", store.AccessToken);
                 return await base.SendAsync(request, ct);
@@ -28,7 +28,7 @@ public class TokenRefreshHandler(TokenStore store) : DelegatingHandler
             if (!refreshResponse.IsSuccessStatusCode) return response;
             var tokenResponse = await refreshResponse.Content.ReadFromJsonAsync<TokenResponse>(ct);
             if (tokenResponse is null) return response;
-            store.ExpiresAt = DateTime.UtcNow.AddMinutes(tokenResponse.ExpiresIn);
+            store.AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(tokenResponse.AccessTokenExpiresIn);
             store.RefreshToken = tokenResponse.RefreshToken;
             store.AccessToken = tokenResponse.AccessToken;
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenResponse.AccessToken);
